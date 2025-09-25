@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thread 팔로우 분석기</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+            padding: 30px;
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 14px;
+            resize: vertical;
+            min-height: 120px;
+            transition: border-color 0.3s;
+            font-family: monospace;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .help-text {
+            margin-top: 5px;
+            font-size: 12px;
+            color: #888;
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .results {
+            margin-top: 30px;
+            display: none;
+        }
+
+        .result-section {
+            margin-bottom: 25px;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        .result-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .count {
+            background: white;
+            padding: 2px 8px;
+            border-radius: 15px;
+            font-size: 12px;
+            color: #667eea;
+        }
+
+        .user-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .user-tag {
+            background: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            border: 1px solid #e0e0e0;
+            transition: all 0.2s;
+        }
+
+        .user-tag:hover {
+            border-color: #667eea;
+            transform: scale(1.05);
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .stat-card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: #999;
+            padding: 20px;
+            font-style: italic;
+        }
+
+        .error {
+            background: #fee;
+            color: #c33;
+            padding: 10px;
+            border-radius: 8px;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+
+        .info-box {
+            margin-bottom: 25px;
+        }
+
+        .info-box details {
+            background: #f0f4ff;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+            border: 1px solid #d4deff;
+        }
+
+        .info-box summary {
+            cursor: pointer;
+            font-weight: 600;
+            color: #667eea;
+            font-size: 14px;
+            outline: none;
+            user-select: none;
+        }
+
+        .info-box summary:hover {
+            color: #764ba2;
+        }
+
+        .info-content {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #e0e7ff;
+        }
+
+        .info-content h3 {
+            font-size: 15px;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .info-content h4 {
+            font-size: 14px;
+            color: #555;
+            margin-top: 15px;
+            margin-bottom: 8px;
+        }
+
+        .info-content ol, .info-content ul {
+            margin-left: 20px;
+            margin-bottom: 10px;
+        }
+
+        .info-content li {
+            margin-bottom: 5px;
+            font-size: 13px;
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .info-content .note {
+            background: #fff;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 13px;
+            color: #667eea;
+            margin-top: 10px;
+            border-left: 3px solid #667eea;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+
+            .user-tag {
+                font-size: 12px;
+                padding: 5px 10px;
+            }
+
+            .info-box details {
+                padding: 12px;
+            }
+
+            .info-content {
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧵 Thread 팔로우 분석기</h1>
+        <p class="subtitle">누가 맞팔했는지 한눈에 확인하세요</p>
+
+        <div class="info-box">
+            <details>
+                <summary>📋 사용 방법 (클릭하여 펼치기)</summary>
+                <div class="info-content">
+                    <h3>Thread에서 목록 복사하는 방법:</h3>
+                    <ol>
+                        <li><strong>모바일 앱에서:</strong>
+                            <ul>
+                                <li>프로필 → 팔로워 또는 팔로잉 클릭</li>
+                                <li>목록 화면에서 텍스트를 길게 누르기</li>
+                                <li>전체 선택 → 복사</li>
+                            </ul>
+                        </li>
+                        <li><strong>웹 브라우저에서:</strong>
+                            <ul>
+                                <li>threads.net에서 로그인</li>
+                                <li>프로필 → 팔로워/팔로잉 클릭</li>
+                                <li>Ctrl+A (전체선택) → Ctrl+C (복사)</li>
+                            </ul>
+                        </li>
+                    </ol>
+                    <p class="note">💡 복사한 텍스트는 "유저명 → 설명" 형식으로 되어있어도 자동으로 유저명만 추출됩니다.</p>
+                </div>
+            </details>
+
+            <details>
+                <summary>⚠️ Thread 숫자 불일치 현상 설명</summary>
+                <div class="info-content">
+                    <h3>프로필 숫자와 실제 목록이 다른 이유:</h3>
+
+                    <h4>1. 동기화 지연 (가장 흔함)</h4>
+                    <ul>
+                        <li>프로필 숫자 = 캐시된 요약 데이터</li>
+                        <li>목록 = 실시간 데이터</li>
+                        <li>→ 업데이트 시점 차이로 불일치 발생</li>
+                    </ul>
+
+                    <h4>2. 계정 변동</h4>
+                    <ul>
+                        <li>비활성화/삭제된 계정은 목록에서 즉시 사라짐</li>
+                        <li>하지만 전체 숫자에는 늦게 반영됨</li>
+                    </ul>
+
+                    <h4>3. 스팸/봇 정리</h4>
+                    <ul>
+                        <li>Meta가 주기적으로 가짜 계정 대량 삭제</li>
+                        <li>목록과 숫자 반영 시점이 다름</li>
+                    </ul>
+
+                    <h4>해결 방법:</h4>
+                    <ul>
+                        <li>✅ 시간이 지나면 자동 해결 (대부분)</li>
+                        <li>✅ 앱 재시작 또는 새로고침</li>
+                        <li>✅ 캐시 삭제 (Android)</li>
+                        <li>✅ 앱 업데이트 확인</li>
+                    </ul>
+
+                    <p class="note">💭 대부분 24시간 내 자동으로 동기화되니 걱정하지 마세요!</p>
+                </div>
+            </details>
+        </div>
+
+        <div class="input-group">
+            <label for="followers">팔로워 목록</label>
+            <textarea id="followers" placeholder="user1&#10;설명 텍스트&#10;user2&#10;설명 텍스트&#10;..."></textarea>
+            <p class="help-text">Thread에서 복사한 텍스트를 그대로 붙여넣으세요</p>
+        </div>
+
+        <div class="input-group">
+            <label for="following">팔로잉 목록</label>
+            <textarea id="following" placeholder="user1&#10;설명 텍스트&#10;user2&#10;설명 텍스트&#10;..."></textarea>
+            <p class="help-text">Thread에서 복사한 텍스트를 그대로 붙여넣으세요</p>
+        </div>
+
+        <button onclick="analyze()">분석하기 🔍</button>
+
+        <div id="results" class="results">
+            <div class="stats" id="stats"></div>
+
+            <div class="result-section">
+                <div class="result-title">
+                    ✅ 서로 팔로우 (맞팔)
+                    <span class="count" id="mutualCount">0</span>
+                </div>
+                <div class="user-list" id="mutualList"></div>
+            </div>
+
+            <div class="result-section">
+                <div class="result-title">
+                    👀 내가 팔로우했는데 맞팔 안 한 사람
+                    <span class="count" id="notFollowingBackCount">0</span>
+                </div>
+                <div class="user-list" id="notFollowingBackList"></div>
+            </div>
+
+            <div class="result-section">
+                <div class="result-title">
+                    💙 나를 팔로우했는데 내가 팔로우 안 한 사람
+                    <span class="count" id="notFollowedBackCount">0</span>
+                </div>
+                <div class="user-list" id="notFollowedBackList"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function analyze() {
+            const followersText = document.getElementById('followers').value.trim();
+            const followingText = document.getElementById('following').value.trim();
+
+            if (!followersText || !followingText) {
+                alert('팔로워와 팔로잉 목록을 모두 입력해주세요!');
+                return;
+            }
+
+            // Thread에서 복사한 형식 처리
+            // 홀수 줄(1,3,5...)은 유저명, 짝수 줄(2,4,6...)은 설명
+            const processThreadFormat = (text) => {
+                const lines = text.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+                const usernames = [];
+
+                // 홀수 번째 줄(인덱스 0, 2, 4...)만 유저명으로 추출
+                for (let i = 0; i < lines.length; i += 2) {
+                    const username = lines[i].replace('@', '').trim();
+                    if (username) {
+                        usernames.push(username);
+                    }
+                }
+
+                return [...new Set(usernames)]; // 중복 제거
+            };
+
+            // 유저명 정리
+            const followers = processThreadFormat(followersText);
+            const following = processThreadFormat(followingText);
+
+            // Set으로 변환하여 빠른 검색
+            const followersSet = new Set(followers);
+            const followingSet = new Set(following);
+
+            // 분석
+            const mutual = followers.filter(u => followingSet.has(u));
+            const notFollowingBack = following.filter(u => !followersSet.has(u));
+            const notFollowedBack = followers.filter(u => !followingSet.has(u));
+
+            // 통계 표시
+            displayStats(followers.length, following.length, mutual.length);
+
+            // 결과 표시
+            displayResults('mutualList', 'mutualCount', mutual);
+            displayResults('notFollowingBackList', 'notFollowingBackCount', notFollowingBack);
+            displayResults('notFollowedBackList', 'notFollowedBackCount', notFollowedBack);
+
+            // 결과 섹션 표시
+            document.getElementById('results').style.display = 'block';
+
+            // 스크롤
+            document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        function displayStats(followersCount, followingCount, mutualCount) {
+            const statsHtml = `
+                <div class="stat-card">
+                    <div class="stat-value">${followersCount}</div>
+                    <div class="stat-label">팔로워</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${followingCount}</div>
+                    <div class="stat-label">팔로잉</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${mutualCount}</div>
+                    <div class="stat-label">맞팔</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${Math.round((mutualCount / Math.max(followingCount, 1)) * 100)}%</div>
+                    <div class="stat-label">맞팔률</div>
+                </div>
+            `;
+            document.getElementById('stats').innerHTML = statsHtml;
+        }
+
+        function displayResults(listId, countId, users) {
+            const listElement = document.getElementById(listId);
+            const countElement = document.getElementById(countId);
+
+            countElement.textContent = users.length;
+
+            if (users.length === 0) {
+                listElement.innerHTML = '<div class="empty-state">없음</div>';
+            } else {
+                listElement.innerHTML = users
+                    .sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()))
+                    .map(user => `<span class="user-tag">@${user}</span>`)
+                    .join('');
+            }
+        }
+
+        // 엔터키 대신 Ctrl+Enter 또는 Cmd+Enter로 분석 실행
+        document.addEventListener('keydown', function(e) {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                analyze();
+            }
+        });
+    </script>
+</body>
+</html>

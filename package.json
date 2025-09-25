@@ -1,0 +1,17 @@
+{
+  "name": "thread-follow-analyzer",
+  "version": "1.0.0",
+  "description": "Thread 팔로워/팔로잉 분석 도구",
+  "main": "index.html",
+  "scripts": {
+    "dev": "open index.html"
+  },
+  "keywords": [
+    "thread",
+    "follower",
+    "following",
+    "analyzer"
+  ],
+  "author": "",
+  "license": "MIT"
+}
