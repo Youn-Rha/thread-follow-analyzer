@@ -1,8 +1,4 @@
 {
-  "name": "thread-follow-analyzer",
-  "version": 2,
-  "builds": [],
-  "routes": [],
   "cleanUrls": true,
   "trailingSlash": false
 }
