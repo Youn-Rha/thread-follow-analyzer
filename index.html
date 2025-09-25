@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -142,11 +143,16 @@
             font-size: 13px;
             border: 1px solid #e0e0e0;
             transition: all 0.2s;
+            text-decoration: none;
+            color: #333;
+            display: inline-block;
         }
 
         .user-tag:hover {
             border-color: #667eea;
             transform: scale(1.05);
+            background: #f0f4ff;
+            color: #667eea;
         }
 
         .stats {
@@ -292,18 +298,11 @@
                 <div class="info-content">
                     <h3>Thread에서 목록 복사하는 방법:</h3>
                     <ol>
-                        <li><strong>모바일 앱에서:</strong>
-                            <ul>
-                                <li>프로필 → 팔로워 또는 팔로잉 클릭</li>
-                                <li>목록 화면에서 텍스트를 길게 누르기</li>
-                                <li>전체 선택 → 복사</li>
-                            </ul>
-                        </li>
                         <li><strong>웹 브라우저에서:</strong>
                             <ul>
-                                <li>threads.net에서 로그인</li>
+                                <li>threads.com에서 로그인</li>
                                 <li>프로필 → 팔로워/팔로잉 클릭</li>
-                                <li>Ctrl+A (전체선택) → Ctrl+C (복사)</li>
+                                <li>직접 모두 드래그 선택 후 복사(ctrl(cmd)+c)</li>
                             </ul>
                         </li>
                     </ol>
@@ -363,30 +362,12 @@
         <button onclick="analyze()">분석하기 🔍</button>
 
         <div id="results" class="results">
-            <div class="stats" id="stats"></div>
-
-            <div class="result-section">
-                <div class="result-title">
-                    ✅ 서로 팔로우 (맞팔)
-                    <span class="count" id="mutualCount">0</span>
-                </div>
-                <div class="user-list" id="mutualList"></div>
-            </div>
-
             <div class="result-section">
                 <div class="result-title">
                     👀 내가 팔로우했는데 맞팔 안 한 사람
                     <span class="count" id="notFollowingBackCount">0</span>
                 </div>
                 <div class="user-list" id="notFollowingBackList"></div>
-            </div>
-
-            <div class="result-section">
-                <div class="result-title">
-                    💙 나를 팔로우했는데 내가 팔로우 안 한 사람
-                    <span class="count" id="notFollowedBackCount">0</span>
-                </div>
-                <div class="user-list" id="notFollowedBackList"></div>
             </div>
         </div>
     </div>
@@ -426,18 +407,11 @@
             const followersSet = new Set(followers);
             const followingSet = new Set(following);
 
-            // 분석
-            const mutual = followers.filter(u => followingSet.has(u));
+            // 분석 - 내가 팔로우했는데 맞팔 안 한 사람만
             const notFollowingBack = following.filter(u => !followersSet.has(u));
-            const notFollowedBack = followers.filter(u => !followingSet.has(u));
-
-            // 통계 표시
-            displayStats(followers.length, following.length, mutual.length);
 
             // 결과 표시
-            displayResults('mutualList', 'mutualCount', mutual);
             displayResults('notFollowingBackList', 'notFollowingBackCount', notFollowingBack);
-            displayResults('notFollowedBackList', 'notFollowedBackCount', notFollowedBack);
 
             // 결과 섹션 표시
             document.getElementById('results').style.display = 'block';
@@ -446,27 +420,6 @@
             document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
 
-        function displayStats(followersCount, followingCount, mutualCount) {
-            const statsHtml = `
-                <div class="stat-card">
-                    <div class="stat-value">${followersCount}</div>
-                    <div class="stat-label">팔로워</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value">${followingCount}</div>
-                    <div class="stat-label">팔로잉</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value">${mutualCount}</div>
-                    <div class="stat-label">맞팔</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value">${Math.round((mutualCount / Math.max(followingCount, 1)) * 100)}%</div>
-                    <div class="stat-label">맞팔률</div>
-                </div>
-            `;
-            document.getElementById('stats').innerHTML = statsHtml;
-        }
 
         function displayResults(listId, countId, users) {
             const listElement = document.getElementById(listId);
@@ -475,11 +428,11 @@
             countElement.textContent = users.length;
 
             if (users.length === 0) {
-                listElement.innerHTML = '<div class="empty-state">없음</div>';
+                listElement.innerHTML = '<div class="empty-state">모두 맞팔했습니다! 🎉</div>';
             } else {
                 listElement.innerHTML = users
                     .sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()))
-                    .map(user => `<span class="user-tag">@${user}</span>`)
+                    .map(user => `<a href="https://www.threads.com/@${user}" target="_blank" class="user-tag">@${user}</a>`)
                     .join('');
             }
         }
