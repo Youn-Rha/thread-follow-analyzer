@@ -1,0 +1,13 @@
+# robots.txt for Thread Follow Analyzer
+
+User-agent: *
+Allow: /
+
+# Allow crawling of ads.txt for Google AdSense verification
+Allow: /ads.txt
+
+# Sitemap (optional - add if you create one later)
+# Sitemap: https://thread-follow-analyzer.vercel.app/sitemap.xml
+
+# Disallow specific paths if needed
+# Disallow: /private/
